@@ -47,12 +47,41 @@ func main() {
 			keyParts[i] = strings.Title(part)
 		}
 		finalKey := strings.Join(keyParts, "")
+		jsonPart := fmt.Sprintf("`json:\"%s\"`", k)
 		value = v
 		value = reflect.TypeOf(value)
-		output += fmt.Sprintf("\t%s %s\n", finalKey, value)
+		if reflect.TypeOf(v).Kind() == reflect.Map {
+			mapValue := value.(map[string]interface{})
+			output += convert(mapValue)
+		} else {
+			output += fmt.Sprintf("\t%s %s %s\n", finalKey, value, jsonPart)
+		}
 	}
 	output += "}"
 	fmt.Println(output)
+}
+
+func convert(obj map[string]interface{}) string {
+	output := ""
+	snake_case_delim := "_"
+	for k,v := range obj {
+		var value interface{}
+		keyParts := strings.Split(k, snake_case_delim)
+		for i, part := range keyParts {
+			keyParts[i] = strings.Title(part)
+		}
+		finalKey := strings.Join(keyParts, "")
+		jsonPart := fmt.Sprintf("`json:\"%s\"`", k)
+		value = v
+		value = reflect.TypeOf(value)
+		if reflect.TypeOf(v).Kind() == reflect.Map {
+			mapValue := value.(map[string]interface{})
+			convert(mapValue)
+		} else {
+			output += fmt.Sprintf("\t%s %s %s\n", finalKey, value, jsonPart)
+		}
+	}
+	return output
 }
 
 

@@ -2,5 +2,10 @@
 	"first_name": "John",
 	"last_name": "Doe",
 	"age": 28,
-	"us_citizen": true
+	"us_citizen": true,
+	"arr_list": ["a", "b", "c"],
+	"second_obj": {
+		"rent": 123,
+		"is_owner": false
+	}
 }	
