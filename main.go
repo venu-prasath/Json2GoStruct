@@ -37,53 +37,49 @@ func main() {
 		return
 	}
 
-	snake_case_delim := "_"
-	//space_delim := " "
 	output := fmt.Sprintf("type %s struct {\n", structName[0])
-	for k,v := range result {
-		var value interface{}
-		keyParts := strings.Split(k, snake_case_delim)
-		for i, part := range keyParts {
-			keyParts[i] = strings.Title(part)
-		}
-		finalKey := strings.Join(keyParts, "")
-		jsonPart := fmt.Sprintf("`json:\"%s\"`", k)
-		value = v
-		value = reflect.TypeOf(value)
-		if reflect.TypeOf(v).Kind() == reflect.Map {
-			mapValue := value.(map[string]interface{})
-			output += convert(mapValue)
-		} else {
-			output += fmt.Sprintf("\t%s %s %s\n", finalKey, value, jsonPart)
-		}
-	}
+	output += convert(result)
 	output += "}"
 	fmt.Println(output)
 }
 
-func convert(obj map[string]interface{}) string {
+func convert(jsonObj map[string]interface{}) string {
 	output := ""
-	snake_case_delim := "_"
-	for k,v := range obj {
+	for k, v := range jsonObj {
 		var value interface{}
-		keyParts := strings.Split(k, snake_case_delim)
-		for i, part := range keyParts {
-			keyParts[i] = strings.Title(part)
-		}
-		finalKey := strings.Join(keyParts, "")
-		jsonPart := fmt.Sprintf("`json:\"%s\"`", k)
 		value = v
-		value = reflect.TypeOf(value)
-		if reflect.TypeOf(v).Kind() == reflect.Map {
-			mapValue := value.(map[string]interface{})
-			convert(mapValue)
-		} else {
-			output += fmt.Sprintf("\t%s %s %s\n", finalKey, value, jsonPart)
+		valueType := reflect.TypeOf(value).String()
+		updatedKey, jsonPart := convertJsonkeyToGoKey(k)
+		nested := ""
+		nestedValueTypes := ""
+		if reflect.TypeOf(v).Kind() == reflect.Map { //if map
+			if mapValue, ok := v.(map[string]interface{}); ok {
+				nestedValueTypes = "struct {"
+				nested = convert(mapValue)
+
+			}
+		} else if reflect.TypeOf(v).Kind() == reflect.Slice { //if array
+			valueType = "[]interface{}"
 		}
+		if nestedValueTypes == "" {
+			output += fmt.Sprintf("\t%s %s %s\n", updatedKey, valueType, jsonPart)	
+		} else {
+			output += fmt.Sprintf("\t%s %s\n", updatedKey, nestedValueTypes)
+			output += fmt.Sprintf("\t%s", nested)
+			output += fmt.Sprintf("\t} %s\n", jsonPart)
+		}
+		//fmt.Println(nested)
 	}
 	return output
 }
 
-
-
-
+func convertJsonkeyToGoKey(k string) (string, string) {
+	snake_case_delim := "_"
+	keyParts := strings.Split(k, snake_case_delim)
+	for i,part := range keyParts {
+		keyParts[i] = strings.Title(part)
+	}
+	updatedKey := strings.Join(keyParts, "")
+	jsonPart := fmt.Sprintf("`json:\"%s\"`", k)
+	return updatedKey, jsonPart
+}
