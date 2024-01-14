@@ -48,27 +48,33 @@ func convert(jsonObj map[string]interface{}) string {
 	for k, v := range jsonObj {
 		var value interface{}
 		value = v
-		valueType := reflect.TypeOf(value).String()
+		valueType := reflect.TypeOf(value)
+		valueTypeString := ""
+		if valueType == nil {
+			valueTypeString = "interface{}"
+		}
 		updatedKey, jsonPart := convertJsonkeyToGoKey(k)
 		nested := ""
 		nestedValueTypes := ""
-		if reflect.TypeOf(v).Kind() == reflect.Map { //if map
+		if valueType != nil && reflect.TypeOf(v).Kind() == reflect.Map { //if map
 			if mapValue, ok := v.(map[string]interface{}); ok {
 				nestedValueTypes = "struct {"
 				nested = convert(mapValue)
 
 			}
-		} else if reflect.TypeOf(v).Kind() == reflect.Slice { //if array
-			valueType = "[]interface{}"
+		} else if valueType != nil && reflect.TypeOf(v).Kind() == reflect.Slice { //if array
+			if spliceValue, ok := v.([]interface{}); ok {
+				nestedValueTypes = "[]interface{}"
+				nested = convert(spliceValue)
+			}
 		}
 		if nestedValueTypes == "" {
-			output += fmt.Sprintf("\t%s %s %s\n", updatedKey, valueType, jsonPart)	
+			output += fmt.Sprintf("\t%s %s %s\n", updatedKey, valueTypeString, jsonPart)	
 		} else {
 			output += fmt.Sprintf("\t%s %s\n", updatedKey, nestedValueTypes)
 			output += fmt.Sprintf("\t%s", nested)
 			output += fmt.Sprintf("\t} %s\n", jsonPart)
 		}
-		//fmt.Println(nested)
 	}
 	return output
 }
