@@ -1,0 +1,9 @@
+{
+  "name": "john",
+  "age": 32,
+  "address": {
+    "first_line": "111 Main Street",
+    "second_line": "Jersey City",
+    "third_line": "New Jersey"
+  }
+}
